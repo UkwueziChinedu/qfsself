@@ -129,7 +129,7 @@ require_once 'includes/header.php';
     <div class="container">
       <div class="text-center mb-5">
         <h2 class="fw-bold display-6">OUR MISSION</h2>
-        <p class="text-primary fw-medium">SMART MISSION MANAGEMENT</p>
+        <p class="fw-medium" style="color:rgb(255, 99, 71)">SMART MISSION MANAGEMENT</p>
         <div class="mx-auto" style="max-width:720px;">
           <p class="text-white/60">Our mission at QFS Self Custody Ledger is to promote the seamless global
             circulation of digital value.</p>

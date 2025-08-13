@@ -1,3 +1,10 @@
+<?php
+// We only start a session here if it hasn't been started in a preceding script.
+// This prevents "session_start(): A session had already been started..." warnings.
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
 <!doctype html>
 <html lang="en">
 
