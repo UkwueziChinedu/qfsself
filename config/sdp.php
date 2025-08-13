@@ -10,7 +10,7 @@
 
 // --- Database Credentials ---
 // Replace these with your real database connection details
-$host = 'phpmyadmin';
+$host = 'localhost';
 $dbname = 'qfsself'; // Change this to your database name
 $username = 'root'; // Change this to your database username
 $password = ''; // Change this to your database password (often empty for local XAMPP setups)
