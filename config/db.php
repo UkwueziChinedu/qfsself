@@ -9,7 +9,7 @@
 $db_driver = 'mysqli'; // I've changed this to 'mysqli' to match your dashboard code's expectations.
 
 // Database connection details (these are the same for both drivers)
-$host = "localhost";
+$host = "phpmyadmin";
 $dbname = "qfsself";
 $dbuser = "root";
 $dbpass = "";
