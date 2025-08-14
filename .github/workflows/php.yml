@@ -1,0 +1,75 @@
+# This is a GitHub Actions workflow for a plain PHP project that uses MySQL.
+# It automates testing whenever code is pushed to the 'main' branch
+# or a pull request is made to 'main'.
+
+name: PHP CI with MySQL
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # This section sets up a service container. A Docker container running MySQL
+    # will be started and will be available to the main job.
+    services:
+      mysql:
+        # You can specify the MySQL version you need, e.g., '5.7' or '8.0'
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: "" # Set a password for the root user
+          MYSQL_DATABASE: qfsself      # Create a database for testing
+        ports:
+          - 3306:3306 # Map port 3306 on the host to 3306 in the container
+        # Health check to ensure MySQL is ready before proceeding
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+    # Step 1: Check out the repository code
+    - uses: actions/checkout@v4
+
+    # Step 2: Setup PHP
+    # We specify the PHP version and also the necessary extensions to connect to MySQL.
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: mysqli, pdo, pdo_mysql
+
+    # Step 3: Validate composer files
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+
+    # Step 4: Cache Composer packages
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    # Step 5: Install dependencies
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    # Step 6: Run test suite
+    # This step runs your PHPUnit tests. We pass the database credentials
+    # as environment variables to the script.
+    - name: Run test suite
+      run: vendor/bin/phpunit
+      env:
+        DB_HOST: 127.0.0.1
+        DB_PORT: ${{ job.services.mysql.ports['3306'] }}
+        DB_DATABASE: qfsself
+        DB_USERNAME: root
+        DB_PASSWORD: ""
