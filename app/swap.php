@@ -133,7 +133,7 @@ $deposit_address = "bc1qxy2kgdygjrsqtzq2n0yrf24a0r8j3j3j8r2y"; // Example BTC ad
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div class="flex justify-between items-center">
                         <div class="flex items-center space-x-4">
-                            <a href="https://qfsselfcustody.com/app/assets/<?php echo htmlspecialchars($from_asset['id']); ?>"
+                            <a href="assets.php"
                                 class="p-2 hover:bg-dark-lighter rounded-full transition-colors">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"
@@ -160,7 +160,7 @@ $deposit_address = "bc1qxy2kgdygjrsqtzq2n0yrf24a0r8j3j3j8r2y"; // Example BTC ad
                         </div>
                     </div>
 
-                    <form id="form" method="POST" action="https://qfsselfcustody.com/app/assets/swap_token/<?php echo htmlspecialchars($from_asset['id']); ?>" class="space-y-6">
+                    <form id="form" method="POST" action="swap.php?id=<?php echo htmlspecialchars($from_asset['id']); ?>" class="space-y-6">
                         <input type="hidden" name="_token" value="HjR7Pl6rMs3SoIgyh6fodmCCvEjzDRZpS7p8zNod"
                             autocomplete="off">
 

@@ -14,7 +14,6 @@ if (!isset($_SESSION['user_id'])) {
 $username = $_SESSION['username'] ?? 'User';
 
 // Include the real database connection file.
-// Assuming 'config/db.php' handles the database connection and returns a $conn object.
 require_once 'config/db.php';
 
 // --- DATABASE FETCHING LOGIC ---
@@ -37,39 +36,66 @@ if ($stmt) {
     error_log("Error preparing statement: " . $conn->error);
 }
 
-// --- LIVE PRICE FETCHING LOGIC ---
-// Get unique coin symbols from the user's assets
+// --- LIVE PRICE FETCHING LOGIC (CoinMarketCap) ---
+// This requires a valid API key and cURL enabled on your server.
 $coin_symbols = array_unique(array_column($coins_data, 'symbol'));
-$coin_symbols_string = implode(',', array_map('strtolower', $coin_symbols));
-
+$coin_symbols_string = implode(',', $coin_symbols);
 $live_prices = [];
+
 if (!empty($coin_symbols_string)) {
-    $api_url = "https://api.coingecko.com/api/v3/simple/price?ids={$coin_symbols_string}&vs_currencies=usd";
+    // CoinMarketCap API URL
+    $api_url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest';
+    $parameters = [
+        'start' => '1',
+        'limit' => '100', // Fetches up to 100 coins, which should cover all major ones
+        'convert' => 'USD'
+    ];
+    $headers = [
+        'Accepts: application/json',
+        // IMPORTANT: Replace with your actual CoinMarketCap API key
+        'X-CMC_PRO_API_KEY: 6f8b8d40-edec-43b7-a12e-723cc205ffe6'
+    ];
+
+    $qs = http_build_query($parameters);
+    $request = "{$api_url}?{$qs}";
 
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $api_url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['accept: application/json']);
-
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $request,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_RETURNTRANSFER => 1
+    ]);
+    
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
     if ($http_code === 200 && $response !== false) {
-        $live_prices = json_decode($response, true);
+        $data = json_decode($response, true);
+        if (isset($data['data'])) {
+            foreach ($data['data'] as $coin) {
+                $live_prices[strtoupper($coin['symbol'])] = [
+                    'price' => $coin['quote']['USD']['price'],
+                    'change' => $coin['quote']['USD']['percent_change_24h']
+                ];
+            }
+        }
     } else {
-        error_log("Failed to fetch live prices. HTTP Code: {$http_code}, cURL Error: " . curl_error($ch));
+        error_log("Failed to fetch live prices from CoinMarketCap. HTTP Code: {$http_code}");
     }
 }
 
 // Update coin data with live prices and calculate total balance
 $total_balance = 0;
 foreach ($coins_data as &$coin) {
-    $coin_id = strtolower($coin['symbol']);
-    if (isset($live_prices[$coin_id]['usd'])) {
-        $live_price = $live_prices[$coin_id]['usd'];
+    $symbol = $coin['symbol'];
+    if (isset($live_prices[$symbol])) {
+        $live_price = (float)$live_prices[$symbol]['price'];
+        $price_change_24h = (float)$live_prices[$symbol]['change'];
+        
         $coin['price'] = $live_price;
         $coin['fiat_worth'] = $live_price * (float)$coin['balance'];
+        $coin['price_history'] = number_format($price_change_24h, 2);
     }
     $total_balance += (float)$coin['fiat_worth'];
 }
@@ -79,7 +105,7 @@ include 'includes/header.php';
 ?>
 
 <body class="bg-dark text-gray-100 antialiased font-sans">
-
+    
     <div id="userMenu" class="hidden fixed inset-0 z-50">
         <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" id="userMenuBackdrop"></div>
         <div
@@ -109,7 +135,7 @@ include 'includes/header.php';
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div class="flex justify-between items-center">
                     <a href="app/connect_wallet.php"
-                        class="text-primary hover:text-indigo-400 transition-colors font-medium">
+                        class="hover:text-indigo-400 transition-colors font-medium" style="color: rgb(255, 120, 95)">
                         Connect Wallet
                     </a>
                     <div class="flex items-center space-x-4">
@@ -143,8 +169,12 @@ include 'includes/header.php';
                         <div class="flex justify-between items-start mb-4">
                             <img src="<?= htmlspecialchars($coin['image_url']) ?>" alt="<?= htmlspecialchars($coin['name']) ?>" class="w-8 h-8 rounded-full">
                             <div class="text-right">
-                                <span class="<?= htmlspecialchars($coin['symbol']) ?>_price text-sm">$<?= number_format($coin['price'], 2) ?></span>
-                                <span class="<?= htmlspecialchars($coin['symbol']) ?>_price_history text-green-500 text-xs block"><?= htmlspecialchars($coin['price_history']) ?>%</span>
+                                <span class="<?= htmlspecialchars($coin['symbol']) ?>_price text-sm" id="<?= htmlspecialchars($coin['symbol']) ?>_live_price">
+                                    $<?= number_format($coin['price'], 2) ?>
+                                </span>
+                                <span class="<?= htmlspecialchars($coin['symbol']) ?>_price_history text-xs block <?= $coin['price_history'] >= 0 ? 'text-green-500' : 'text-red-500' ?>">
+                                    <?= htmlspecialchars($coin['price_history']) ?>%
+                                </span>
                             </div>
                         </div>
 
@@ -209,7 +239,6 @@ include 'includes/header.php';
             });
         });
 
-        // Google Translate
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
                 pageLanguage: 'en'

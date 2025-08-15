@@ -23,8 +23,8 @@ require_once 'includes/header.php';
     </ul>
 
     <div class="auth-buttons">
-      <a href="#" class="login">Login</a>
-      <a href="#" class="register">Register</a>
+      <a href="login.php" class="login">Login</a>
+      <a href="signup.php" class="register">Register</a>
     </div>
   </nav>
 
@@ -48,7 +48,7 @@ require_once 'includes/header.php';
           <p class="lead text-gray-300 mt-4">A User-Friendly and Potent Cryptocurrency Ledger</p>
 
           <div class="mt-4 d-flex flex-wrap gap-2">
-            <a href="register" class="btn btn-lg text-white rounded-pill border-radius" style="background-color:rgb(255, 99, 71)">Get Started</a>
+            <a href="signup.php" class="btn btn-lg text-white rounded-pill border-radius" style="background-color:rgb(255, 99, 71)">Get Started</a>
             <a href="#about" class="btn btn-outline-light btn-lg rounded-pill">Learn More</a>
           </div>
         </div>
@@ -111,7 +111,7 @@ require_once 'includes/header.php';
         </div>
       </div>
 
-      <div class="p-4 rounded-3 bg-dark">
+      <div class="rounded-3 bg-dark" style="padding: 5px 30px;">
         <h3 class="fw-bold text-uppercase mt-5">Experts on Blockchain Data</h3>
         <h5 class="text-primary">What we are good at</h5>
         <ul class="mt-3 text-white/60">
@@ -210,7 +210,7 @@ require_once 'includes/header.php';
     <div class="container">
       <div class="text-center mb-5">
         <h2 class="fw-bold display-6">Live Cryptocurrency Prices</h2>
-        <p class="text-primary fw-medium">REAL-TIME MARKET DATA</p>
+        <p class=" fw-medium" style="color: rgb(255, 99, 71)">REAL-TIME MARKET DATA</p>
         <p class="text-white/60 mx-auto" style="max-width:800px;">Monitor cryptocurrency price changes in real-time. Stay informed with comprehensive market data and
           trading volumes.</p>
       </div>
@@ -241,16 +241,16 @@ require_once 'includes/header.php';
 
       <div class="text-center">
         <div class="mx-auto bg-dark p-4 rounded-3" style="max-width:800px;">
-          <h3 class="fw-bold">Ready to Start Trading?</h3>
-          <p class="text-white/60">Join QFS Self Custody Ledger today and access advanced trading features, secure storage, and real-time market data.</p>
-          <a href="https://qfsselfcustody.com/register" class="btn btn-primary btn-lg">Create Your Account</a>
+          <h1 class="fw-bold" style="font-size: 2rem;">Ready to Start Trading?</h1>
+          <p class="text-white/70 p-3">Join QFS Self Custody Ledger today and access advanced trading features, secure storage, and real-time market data.</p>
+          <a href="https://qfsselfcustody.com/register" class="btn btn-lg" style=" background-color: rgb(255, 120, 95); color:white; border-radius:30px;">Create Your Account</a>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Contact Section -->
-  <section id="contact" class="py-5 bg-dark">
+  <section id="contact" class="py-5 bg-dark vh-100">
     <div class="container">
       <div class="text-center mb-5">
         <h2 class="fw-bold display-6" >Get In Touch</h2>
@@ -320,7 +320,7 @@ require_once 'includes/header.php';
   </section>
 
   <!-- Footer -->
-  <footer class="py-4 bg-dark">
+  <footer class="py-4 bg-dark" >
     <div class="container">
       <div class="row gy-4">
         <div class="col-md-4">

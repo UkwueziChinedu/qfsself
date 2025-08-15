@@ -14,7 +14,7 @@ if ($conn->connect_error) {
 // 2. Get the asset ID from the URL
 // Use $_GET to get the ID from the URL (e.g., assets.php?id=1)
 // We use intval() to ensure the ID is a safe integer.
-$asset_id = isset($_GET['id']) ? intval($_GET['id']) : 0; 
+$asset_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 // If the asset ID is not valid, redirect or show an error
 if ($asset_id === 0) {
@@ -39,9 +39,47 @@ if (!$asset) {
 $stmt->close();
 $conn->close();
 
+// --- LIVE PRICE FETCHING LOGIC ---
+$symbol_to_id = [
+    'BTC' => 'bitcoin',
+    'ETH' => 'ethereum',
+    'BNB' => 'binance-coin',
+    'SOL' => 'solana',
+    'ADA' => 'cardano',
+    'DOGE' => 'dogecoin',
+    'XRP' => 'ripple',
+    'BCH' => 'bitcoin-cash',
+    'XLM' => 'stellar',
+    'LTC' => 'litecoin',
+    'TRX' => 'tron',
+    'ALGO' => 'algorand',
+    'DOT' => 'polkadot',
+    'USDT' => 'tether',
+    'SHIB' => 'shiba-inu'
+];
+$symbol = $asset['symbol'] ?? '';
+$coin_id = isset($symbol_to_id[$symbol]) ? $symbol_to_id[$symbol] : strtolower($symbol);
+$live_price = 0;
+if ($coin_id) {
+    $api_url = "https://api.coincap.io/v2/assets?ids={$coin_id}";
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $api_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['accept: application/json']);
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($http_code === 200 && $response !== false) {
+        $data = json_decode($response, true);
+        if (isset($data['data'][0]['priceUsd'])) {
+            $live_price = (float)$data['data'][0]['priceUsd'];
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -141,7 +179,7 @@ $conn->close();
             <div class="bg-slate-800 border-b border-gray-700 w-full">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div class="flex justify-between items-center mb-6">
-                        <a href="app"
+                        <a href="../dashboard.php"
                             class="p-2 hover:bg-gray-700 rounded-full transition-colors">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
@@ -268,4 +306,5 @@ $conn->close();
     });
 </script>
 <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
 </html>

